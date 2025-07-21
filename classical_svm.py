@@ -9,7 +9,7 @@ data = np.loadtxt("diabetes_hackathon.csv", delimiter=",", dtype=str)
 data = data[1:, :]
 remove_cols = [2,3,5,6,7,8,9]
 stripped_data = np.delete(data, remove_cols, axis=1)
-features = 4
+features = 11 - len(remove_cols)
 
 data_size = len(data)
 
