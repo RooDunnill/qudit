@@ -1,6 +1,6 @@
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
-
+from sklearn import svm
 
 data = []
 data = np.loadtxt("diabetes_hackathon.csv", delimiter=",", dtype=str)
@@ -32,29 +32,22 @@ def encode(data):
 encoded_stripped_data = encode(stripped_data)
 normalized_data = scaler.fit_transform(encoded_stripped_data)
 
-pos_testing_data = normalized_data[-tdp_range:,:4]
-neg_testing_data = normalized_data[:tdp_range,:4]
+pos_testing_data = normalized_data[-tdp_range:,:]
+neg_testing_data = normalized_data[:tdp_range,:]
+total_testing_data = np.append(pos_testing_data, neg_testing_data, axis=0)
+
 normalized_data = normalized_data[tdp_range:-tdp_range, :]
 
+np.random.shuffle(total_testing_data)
 np.random.shuffle(normalized_data)
 
-results = normalized_data[:,4:]
-normalized_data = np.delete(normalized_data, 4, axis=1)
+training_results = normalized_data[:,4:]
+testing_results = total_testing_data[:,4:]
 
+training_data = normalized_data[:,:4]
+testing_data = total_testing_data[:,:4]
 
-def results_encode(data):
-    for i in range(len(data)):
-        if data[i,0] == 'Y':
-            data[i,0] = 1
-        else:
-            data[i,0] = 0
-    return data
-
-
-
-
-print(normalized_data)
-print(results)
-print(pos_testing_data)
-print(neg_testing_data)
-print(testing_data_points)
+print(training_results)
+print(testing_results)
+print(training_data)
+print(testing_data)
