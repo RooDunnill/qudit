@@ -1,3 +1,10 @@
+import os
+import sys
+currentdir = os.path.abspath("")
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0, parentdir)
+
+
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import train_test_split
@@ -9,12 +16,13 @@ from qiskit_aer import AerSimulator
 import qiskit_superstaq as qss
 from sklearn.metrics import balanced_accuracy_score, f1_score
 import matplotlib.pyplot as plt
+from config import API_KEY
 
 
 data = []                                                                 #creates an array for the dataset from the csv
 data = np.loadtxt("diabetes_hackathon.csv", delimiter=",", dtype=str)     #imports the data from the csv
 data = data[1:, :]                                                        #strips the titles
-remove_cols = [2,3,4,9]                                         #removes the features that aren't needed
+remove_cols = [2,3,4,5,6,7,8,9]                                         #removes the features that aren't needed
 stripped_data = np.delete(data, remove_cols, axis=1)                      #strips them from the array
 features = 11 - len(remove_cols)                                          #finds the amount of features used
 data_size = len(data)                                                     #computes the size of the data set
@@ -36,8 +44,8 @@ def encode(data):                                                         #encod
             data[i,-1] = 0
     return data
 
-encoded_stripped_data = encode(stripped_data)
-normalized_data = scaler.fit_transform(encoded_stripped_data) 
+encoded_stripped_data = encode(stripped_data)                            #runs the data through the encoding function
+normalized_data = scaler.fit_transform(encoded_stripped_data)            #normalises the data between 0 and 1
 #normalized_data[:,1:-1] = normalized_data[:, 1:-1] * 2 * np.pi
 
 
@@ -59,10 +67,10 @@ circ.compose(feature_map, inplace=True)
 circ.compose(feature_map_inv, inplace=True)
 circ.measure_all()
 bound_circ = circ.assign_parameters(np.append(training_data[0], training_data[1]))
-sim = AerSimulator()
 
-result = sim.run(bound_circ).result()
-counts = result.get_counts(bound_circ)
+provider = qss.SuperstaqProvider(api_key=API_KEY)
+sim = provider.get_backend("cq_sqale_qpu")
+
 
 def square_kernel_mat(training_data):
     mat_dim = len(training_data)
@@ -73,11 +81,12 @@ def square_kernel_mat(training_data):
                 kernel_mat[i,i] += 1
             else:
                 bound_circ = circ.assign_parameters(np.append(training_data[i], training_data[j]))
-                result = sim.run(bound_circ, shots=shots).result()
-                counts = result.get_counts(bound_circ)
+                result = sim.run(bound_circ, shots=shots, method="sim").result()
+                counts = result.get_counts()
                 kernel_mat[i,j] = counts.get('0' * features, 0) / shots
                 kernel_mat[j,i] = counts.get('0' * features, 0) / shots
     return kernel_mat
+
 
 def testing_kernel_mat(training_data, testing_data):
     y_mat_dim = len(training_data)
@@ -86,8 +95,8 @@ def testing_kernel_mat(training_data, testing_data):
     for i in range(x_mat_dim):
         for j in range(y_mat_dim):
                 bound_circ = circ.assign_parameters(np.append(testing_data[i], training_data[j]))
-                result = sim.run(bound_circ, shots=shots).result()
-                counts = result.get_counts(bound_circ)
+                result = sim.run(bound_circ, shots=shots, method="sim").result()
+                counts = result.get_counts()
                 kernel_mat[i,j] = counts.get('0' * features, 0) / shots
     return kernel_mat
 
