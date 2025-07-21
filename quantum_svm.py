@@ -6,7 +6,8 @@ from sklearn import svm
 from qiskit.circuit.library import ZFeatureMap
 from qiskit import QuantumCircuit
 from qiskit_aer import AerSimulator
-from qiskit.visualization import plot_histogram
+from sklearn.metrics import balanced_accuracy_score, f1_score
+
 
 data = []                                                                 #creates an array for the dataset from the csv
 data = np.loadtxt("diabetes_hackathon.csv", delimiter=",", dtype=str)     #imports the data from the csv
@@ -16,8 +17,8 @@ stripped_data = np.delete(data, remove_cols, axis=1)                      #strip
 features = 11 - len(remove_cols)                                          #finds the amount of features used
 data_size = len(data)                                                     #computes the size of the data set
 shots = 1000
-testing_percentage = 2                                                    #the size of the testing set
-training_percentage = 4                                                   #the size of the training set
+testing_percentage = 10                                                    #the size of the testing set
+training_percentage = 80                                                   #the size of the training set
                          
 scaler = MinMaxScaler()                               
 
@@ -89,28 +90,19 @@ def testing_kernel_mat(training_data, testing_data):
                 kernel_mat[i,j] = counts['0' * features] / shots
     return kernel_mat
 
+training_kernel = square_kernel_mat(training_data)
+testing_kernel = testing_kernel_mat(training_data, testing_data)
 
-
-
-
-
-
-
-
-
+svc = svm.SVC(kernel="precomputed")
+svc.fit(training_kernel, training_results)
+y_predict = svc.predict(testing_kernel)
 
 
 
 print(f"Machine Learning Results:")
 
-print(training_data)
-print(testing_data)
-print(training_results)
-print(testing_results)
 
-print(feature_map.draw())
-print(feature_map_inv.draw())
-print(circ.draw())
-print(counts)
-print(square_kernel_mat(training_data))
-print(testing_kernel_mat(training_data, testing_data))
+print(y_predict)
+print(testing_results)
+print(f"Balanced Accuracy Score: {balanced_accuracy_score(testing_results, y_predict)}")
+print(f"f1 Score: {f1_score(testing_results, y_predict, average="weighted")}")
