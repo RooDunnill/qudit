@@ -5,25 +5,23 @@ from sklearn.metrics import accuracy_score
 from sklearn import svm
 from qiskit.circuit.library import ZFeatureMap
 from qiskit import QuantumCircuit
+from qiskit_aer import AerSimulator
+from qiskit.visualization import plot_histogram
 
+data = []                                                                 #creates an array for the dataset from the csv
+data = np.loadtxt("diabetes_hackathon.csv", delimiter=",", dtype=str)     #imports the data from the csv
+data = data[1:, :]                                                        #strips the titles
+remove_cols = [1,2,3,4,5,6,7,8,9]                                         #removes the features that aren't needed
+stripped_data = np.delete(data, remove_cols, axis=1)                      #strips them from the array
+features = 11 - len(remove_cols)                                          #finds the amount of features used
+data_size = len(data)                                                     #computes the size of the data set
+shots = 1000
+testing_percentage = 2                                                    #the size of the testing set
+training_percentage = 4                                                   #the size of the training set
+                         
+scaler = MinMaxScaler()                               
 
-data = []
-data = np.loadtxt("diabetes_hackathon.csv", delimiter=",", dtype=str)
-data = data[1:, :]
-remove_cols = [1,2,3,4,5,6,7,8,9]
-stripped_data = np.delete(data, remove_cols, axis=1)
-features = 11 - len(remove_cols)
-
-data_size = len(data)
-
-testing_percentage = 2
-training_percentage = 4
-tdp_range = int(np.floor(testing_percentage * data_size / 2))
-testing_data_points = tdp_range * 2
-
-scaler = MinMaxScaler()
-
-def encode(data):
+def encode(data):                                                         #encodes any strings in the set into 0s or 1s
     for i in range(len(data)):
         if data[i,0] == 'F':
             data[i,0] = 1
@@ -55,19 +53,64 @@ circ = QuantumCircuit(features)
 circ.compose(feature_map, inplace=True)
 circ.compose(feature_map_inv, inplace=True)
 circ.measure_all()
-circ.assign_parameters(np.append(training_data[0], training_data[1]))
+bound_circ = circ.assign_parameters(np.append(training_data[0], training_data[1]))
+print(circ.draw())
+sim = AerSimulator()
+
+result = sim.run(bound_circ).result()
+counts = result.get_counts(bound_circ)
+
+def square_kernel_mat(training_data):
+    mat_dim = len(training_data)
+    kernel_mat = np.zeros((mat_dim, mat_dim))
+    sim = AerSimulator()
+    for i in range(mat_dim):
+        for j in range(i, mat_dim):
+            if j == i:
+                kernel_mat[i,i] += 1
+            else:
+                bound_circ = circ.assign_parameters(np.append(training_data[i], training_data[j]))
+                result = sim.run(bound_circ, shots=shots).result()
+                counts = result.get_counts(bound_circ)
+                kernel_mat[i,j] = counts['0' * features] / shots
+                kernel_mat[j,i] = counts['0' * features] / shots
+    return kernel_mat
+
+def testing_kernel_mat(training_data, testing_data):
+    y_mat_dim = len(training_data)
+    x_mat_dim = len(testing_data)
+    kernel_mat = np.zeros((x_mat_dim, y_mat_dim))
+    sim = AerSimulator()
+    for i in range(x_mat_dim):
+        for j in range(y_mat_dim):
+                bound_circ = circ.assign_parameters(np.append(testing_data[i], training_data[j]))
+                result = sim.run(bound_circ, shots=shots).result()
+                counts = result.get_counts(bound_circ)
+                kernel_mat[i,j] = counts['0' * features] / shots
+    return kernel_mat
+
+
+
+
+
+
+
+
+
+
+
+
 
 print(f"Machine Learning Results:")
-print(f"Training Data size: {len(training_data)}")
-clf = svm.SVC(kernel = "linear")
+
 print(training_data)
 print(testing_data)
 print(training_results)
 print(testing_results)
-clf.fit(training_data, training_results)
-print(clf.predict(testing_data))
-print(clf.score(training_data, training_results))
-print(accuracy_score(testing_results, clf.predict(testing_data)))
+
 print(feature_map.draw())
 print(feature_map_inv.draw())
 print(circ.draw())
+print(counts)
+print(square_kernel_mat(training_data))
+print(testing_kernel_mat(training_data, testing_data))
