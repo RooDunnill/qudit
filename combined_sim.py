@@ -31,14 +31,14 @@ def main():
     data_set = 0
     data = [] 
     shots = 1000
-    testing_size = 40                                                    #the size of the testing set
-    training_size = 160                                                   #the size of the training set        
+    testing_size = 10                                                           #the size of the testing set
+    training_size = 20                                                          #the size of the training set        
     run_superstaq = 0
 
     if data_set == 0:
-        data = np.loadtxt("diabetes_hackathon.csv", delimiter=",", dtype=str)     #imports the data from the csv
+        data = np.loadtxt("diabetes_hackathon.csv", delimiter=",", dtype=str)   #imports the data from the csv
         remove_cols = [2,3,4,6,7,8,9]                                           #removes the features that aren't needed
-        features = 11 - len(remove_cols)                                          #finds the amount of features used
+        features = 11 - len(remove_cols)                                        #finds the amount of features used
         normalized_data = encode_ds1(data, remove_cols)
     else:
         data = np.loadtxt("diabetes_dataset_2.csv", delimiter=",", dtype=str)

@@ -33,8 +33,8 @@ def main():
     data_set = 0
     data = [] 
     shots = 1000
-    testing_size = 40                                                    #the size of the testing set
-    training_size = 160                                                   #the size of the training set        
+    testing_size = 10                                                    #the size of the testing set
+    training_size = 12                                                   #the size of the training set        
     run_superstaq = 0
 
     if data_set == 0:
@@ -180,8 +180,7 @@ def main():
             writer.writerow([data_set, features, training_size, testing_size, shots, classical_ml_train_accuracy, classical_ml_test_accuracy, aer_balanced_accuracy, aer_f1_score, superstaq_balanced_accuracy_score, superstaq_f1_score])
     else:
         np.savetxt("./training_kernels/aer_kernel_matrix.csv", aer_training_kernel, delimiter=",")    #saves the training kernel to a file
-
-        with open('accuracy_data_c_a_pca.csv', 'a', newline='') as f:    #saves the relevent daccuracy data
+        with open('accuracy_data_vary_training_size.csv', 'a', newline='') as f:    #saves the relevent daccuracy data
             writer = csv.writer(f)
             writer.writerow([data_set, features, training_size, testing_size, shots, classical_ml_test_accuracy, aer_balanced_accuracy])
 
