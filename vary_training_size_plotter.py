@@ -20,8 +20,8 @@ for i in range(7):
     for j in range(10):
         classical_avg[i] += classical_y_data[j+10*i]
         aer_avg[i] += aer_y_data[j+10*i]
-    classical_std[i] = np.std(classical_y_data[10*i:10*(i+1)], ddof=1)
-    aer_std[i] = np.std(aer_y_data[10*i:10*(i+1)], ddof=1)
+    classical_std[i] = np.std(classical_y_data[10*i:10*(i+1)], ddof=1) / np.sqrt(10)
+    aer_std[i] = np.std(aer_y_data[10*i:10*(i+1)], ddof=1) / np.sqrt(10)
 classical_avg /= 10
 aer_avg /= 10
 

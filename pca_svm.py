@@ -49,8 +49,8 @@ def main():
         normalized_data = encode_ds2(data, remove_cols)
 
     
-    results = normalized_data[:,features:]                              #removes all columns of data bar results
-    data = normalized_data[:,:features]                                 #removes the results column off of the end
+    results = normalized_data[:,features:]                             #removes all columns of data bar results
+    data = normalized_data[:,:features] * np.pi / 2                                #removes the results column off of the end
 
     features = 4
     pca = PCA(n_components=features)
@@ -62,7 +62,7 @@ def main():
     s += 1
     training_results = training_results.T[0]                          #reshapes the arrays
     testing_results = testing_results.T[0]
-    
+    print(training_results)
     
 
     feature_map = ZZFeatureMap(feature_dimension=features, reps=1, entanglement="linear").decompose()   #entangled feature map for double z rotations
@@ -150,8 +150,15 @@ def main():
     clf = svm.SVC(kernel = "linear")                  #classical simulator kernel
     clf.fit(training_data, training_results)          #trains the kernel with the training data
 
+    clf_rbf = svm.SVC(kernel = "linear")
+    clf_rbf.fit(training_data, training_results)
+
     classical_ml_train_accuracy = clf.score(training_data, training_results)                 #computes the accuracy of the algorithm in training
     classical_ml_test_accuracy = accuracy_score(testing_results, clf.predict(testing_data))  #computes the accuracy of the algorithm in testing
+    
+    classical_ml_train_accuracy_rbf = clf_rbf.score(training_data, training_results)
+    classical_ml_test_accuracy_rbf = accuracy_score(testing_results, clf_rbf.predict(testing_data))
+
     aer_balanced_accuracy = balanced_accuracy_score(testing_results, aer_y_predict)          #computes the balanced accuracy of the aer simulator
     aer_f1_score = f1_score(testing_results, aer_y_predict, average="weighted")             #computes the f1 accuracy of the aer simulator
 
@@ -175,9 +182,9 @@ def main():
         print(f"Superstaq Simulator Balanced Accuracy Score: {superstaq_balanced_accuracy_score}")
         print(f"Superstaq Simulator F1 Score: {superstaq_f1_score}")
 
-        with open('accuracy_data_superstaq_pca.csv', 'a', newline='') as f:    #saves the relevent daccuracy data
+        with open('accuracy_data_compare_3.csv', 'a', newline='') as f:    #saves the relevent daccuracy data
             writer = csv.writer(f)
-            writer.writerow([data_set, features, training_size, testing_size, shots, classical_ml_train_accuracy, classical_ml_test_accuracy, aer_balanced_accuracy, aer_f1_score, superstaq_balanced_accuracy_score, superstaq_f1_score])
+            writer.writerow([data_set, features, training_size, testing_size, shots, classical_ml_test_accuracy, classical_ml_test_accuracy_rbf, aer_balanced_accuracy, superstaq_balanced_accuracy_score])
     else:
         np.savetxt("./training_kernels/aer_kernel_matrix.csv", aer_training_kernel, delimiter=",")    #saves the training kernel to a file
         with open('accuracy_data_vary_training_size.csv', 'a', newline='') as f:    #saves the relevent daccuracy data
@@ -188,10 +195,6 @@ def main():
     elapsed_time = end_time - start_time
     print(f"Machine Learning Algorithms took {elapsed_time:.3f} seconds to run")
 
-while True:
-    main()
 
+main()
 
-plt.figure()
-plt.imshow(aer_training_kernel, cmap="hot")          #plots and displays a heatmap of the aer simulator
-plt.show()
