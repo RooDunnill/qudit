@@ -28,7 +28,7 @@ def main():
     shots = 1000
     testing_size = 2                                                    #the size of the testing set
     training_size = 2                                                   #the size of the training set        
-    run_superstaq = 1
+    run_superstaq = 0
 
     if data_set == 0:
         data = np.loadtxt("diabetes_hackathon.csv", delimiter=",", dtype=str)     #imports the data from the csv
@@ -165,8 +165,6 @@ def main():
         superstaq_y_predict = svc_superstaq.predict(superstaq_testing_kernel)
         print(f"Superstaq Simulator Balanced Accuracy Score: {balanced_accuracy_score(testing_results, superstaq_y_predict)}")
         print(f"Superstaq Simulator F1 Score: {f1_score(testing_results, superstaq_y_predict, average="weighted")}")
-
-
 
 
 

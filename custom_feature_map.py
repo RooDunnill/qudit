@@ -53,17 +53,20 @@ testing_results = testing_results.T[0]
 theta = np.pi
 
 def custom_feature_map(features, reps=1):
-    x= ParameterVector("x", length=features)
+
+    x = ParameterVector("x", length=features)
+    y = ParameterVector("y", length=features)
 
     fqc = QuantumCircuit(features)
 
     for _ in range(reps):
         for i in range(features):
             fqc.h(i)
-            fqc.rz(x[i], i)
+            fqc.rz(2 * x[i], i)
 
         for i in range(features - 1):
             fqc.crx(theta, i, i + 1)
+            fqc.rz()
         fqc.crx(theta, features - 1, 0)
 
     return fqc
