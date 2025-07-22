@@ -13,6 +13,7 @@ from sklearn.metrics import balanced_accuracy_score, f1_score
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 from sklearn import svm
+from sklearn.decomposition import PCA
 
 from qiskit.circuit.library import ZFeatureMap, ZZFeatureMap
 from qiskit import QuantumCircuit
@@ -25,6 +26,7 @@ from encoding_funcs import encode_ds1, encode_ds2
 from config import API_KEY, seed
 
 s = 0
+
 def main():
     global s
     start_time = time.time()
@@ -37,7 +39,7 @@ def main():
 
     if data_set == 0:
         data = np.loadtxt("diabetes_hackathon.csv", delimiter=",", dtype=str)     #imports the data from the csv
-        remove_cols = [2,3,4,6,7,8,9]                                           #removes the features that aren't needed
+        remove_cols = [4]                                           #removes the features that aren't needed
         features = 11 - len(remove_cols)                                          #finds the amount of features used
         normalized_data = encode_ds1(data, remove_cols)
     else:
@@ -46,15 +48,21 @@ def main():
         features = 8 - len(remove_cols)
         normalized_data = encode_ds2(data, remove_cols)
 
-
+    
     results = normalized_data[:,features:]                              #removes all columns of data bar results
     data = normalized_data[:,:features]                                 #removes the results column off of the end
+
+    features = 4
+    pca = PCA(n_components=features)
+    pca.fit(data)
+    data = pca.fit_transform(data)
+    
                                                                         #splits both the results and the data up into testing and training
     training_data, testing_data, training_results, testing_results = train_test_split(data, results, shuffle=True, test_size=testing_size, train_size=training_size, random_state=seed[s])
     s += 1
-
     training_results = training_results.T[0]                          #reshapes the arrays
     testing_results = testing_results.T[0]
+    
     
 
     feature_map = ZZFeatureMap(feature_dimension=features, reps=1, entanglement="linear").decompose()   #entangled feature map for double z rotations
@@ -64,7 +72,6 @@ def main():
     circ.compose(feature_map, inplace=True)                   #adds the feature map to the circuit
     circ.compose(feature_map_inv, inplace=True)               #adds the inverted feature map to the circuit
     circ.measure_all()                                        #measures every qubit
-
     provider = qss.SuperstaqProvider(api_key=API_KEY)         #initiates and verifies the superstaq provider
     superstaq_sim = provider.get_backend("cq_sqale_qpu")      #uses the given gpu as the backend
     sim = AerSimulator()                                      #uses qiskits aer sim
@@ -168,13 +175,13 @@ def main():
         print(f"Superstaq Simulator Balanced Accuracy Score: {superstaq_balanced_accuracy_score}")
         print(f"Superstaq Simulator F1 Score: {superstaq_f1_score}")
 
-        with open('accuracy_data_superstaq.csv', 'a', newline='') as f:    #saves the relevent daccuracy data
+        with open('accuracy_data_superstaq_pca.csv', 'a', newline='') as f:    #saves the relevent daccuracy data
             writer = csv.writer(f)
             writer.writerow([data_set, features, training_size, testing_size, shots, classical_ml_train_accuracy, classical_ml_test_accuracy, aer_balanced_accuracy, aer_f1_score, superstaq_balanced_accuracy_score, superstaq_f1_score])
     else:
         np.savetxt("./training_kernels/aer_kernel_matrix.csv", aer_training_kernel, delimiter=",")    #saves the training kernel to a file
 
-        with open('accuracy_data_c_a.csv', 'a', newline='') as f:    #saves the relevent daccuracy data
+        with open('accuracy_data_c_a_pca.csv', 'a', newline='') as f:    #saves the relevent daccuracy data
             writer = csv.writer(f)
             writer.writerow([data_set, features, training_size, testing_size, shots, classical_ml_test_accuracy, aer_balanced_accuracy])
 

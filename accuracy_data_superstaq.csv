@@ -1,0 +1,2 @@
+data_set, features, training_size, testing_size, shots, classical_ml_training_accuracy, classical_ml_testing_accuracy, aer_balanced_accuracy, aer_f1_score, superstaq_balanced_accuracy_score, superstaq_f1_score 
+0,5,2,2,1000,1.0,0.0,0.0,0.0,0.0,0.0
