@@ -35,7 +35,7 @@ def main():
     shots = 1000
     testing_size = 10                                                    #the size of the testing set
     training_size = 12                                                   #the size of the training set        
-    run_superstaq = 0
+    run_superstaq = 1
 
     if data_set == 0:
         data = np.loadtxt("diabetes_hackathon.csv", delimiter=",", dtype=str)     #imports the data from the csv
@@ -58,7 +58,7 @@ def main():
     data = pca.fit_transform(data)
     
                                                                         #splits both the results and the data up into testing and training
-    training_data, testing_data, training_results, testing_results = train_test_split(data, results, shuffle=True, test_size=testing_size, train_size=training_size, random_state=seed[s])
+    training_data, testing_data, training_results, testing_results = train_test_split(data, results, shuffle=True, test_size=testing_size, train_size=training_size)
     s += 1
     training_results = training_results.T[0]                          #reshapes the arrays
     testing_results = testing_results.T[0]
@@ -187,7 +187,7 @@ def main():
             writer.writerow([data_set, features, training_size, testing_size, shots, classical_ml_test_accuracy, classical_ml_test_accuracy_rbf, aer_balanced_accuracy, superstaq_balanced_accuracy_score])
     else:
         np.savetxt("./training_kernels/aer_kernel_matrix.csv", aer_training_kernel, delimiter=",")    #saves the training kernel to a file
-        with open('accuracy_data_vary_training_size.csv', 'a', newline='') as f:    #saves the relevent daccuracy data
+        with open('accuracy_data_compare_3_2.csv', 'a', newline='') as f:    #saves the relevent daccuracy data
             writer = csv.writer(f)
             writer.writerow([data_set, features, training_size, testing_size, shots, classical_ml_test_accuracy, aer_balanced_accuracy])
 
@@ -197,4 +197,3 @@ def main():
 
 
 main()
-
